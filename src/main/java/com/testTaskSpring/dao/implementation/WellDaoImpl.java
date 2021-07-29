@@ -10,8 +10,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
+@Slf4j
 public class WellDaoImpl implements WellDao {
 
   private final static String SELECT_ALL_WELL = "SELECT id, name FROM well";
@@ -20,6 +22,8 @@ public class WellDaoImpl implements WellDao {
 
   @Override
   public List<Well> getAllWells() {
+
+    log.info("getAllWells is started");
 
     List<Well> wells = new ArrayList<>();
     try (Connection connection = ConnectionProvider.getConnection();
@@ -35,7 +39,7 @@ public class WellDaoImpl implements WellDao {
       }
     }
     catch (SQLException throwable) {
-      throwable.printStackTrace();
+      log.error("This is error : " + throwable.getMessage(), throwable);
     }
 
     return wells;
@@ -43,6 +47,8 @@ public class WellDaoImpl implements WellDao {
 
   @Override
   public Well createWell(@NotNull Well well) {
+
+    log.info("createWell is started");
 
     try (Connection connection = ConnectionProvider.getConnection();
         PreparedStatement preparedStatement = connection.prepareStatement(INSERT_WELL,
@@ -68,7 +74,7 @@ public class WellDaoImpl implements WellDao {
       return well;
     }
     catch (SQLException throwable) {
-      throwable.printStackTrace();
+      log.error("This is error : " + throwable.getMessage(), throwable);
     }
 
     return null;
@@ -76,6 +82,8 @@ public class WellDaoImpl implements WellDao {
 
   @Override
   public Well getWellByName(String name) {
+
+    log.info("getWellByName is started");
 
     try (Connection connection = ConnectionProvider.getConnection();
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_BY_NAME)) {
@@ -87,7 +95,7 @@ public class WellDaoImpl implements WellDao {
       }
     }
     catch (SQLException throwable) {
-      throwable.printStackTrace();
+      log.error("This is error : " + throwable.getMessage(), throwable);
     }
 
     return null;
@@ -101,6 +109,9 @@ public class WellDaoImpl implements WellDao {
    */
   private Well extractWellFromResultSet(@NotNull ResultSet resultSet) {
 
+    log.info("extractWellFromResultSet is started");
+
+
     Well well = new Well();
     try {
       long id = resultSet.getLong(1);
@@ -108,7 +119,7 @@ public class WellDaoImpl implements WellDao {
       well = new Well(id, name);
     }
     catch (SQLException throwable) {
-      throwable.printStackTrace();
+      log.error("This is error : ", throwable);
     }
 
     return well;

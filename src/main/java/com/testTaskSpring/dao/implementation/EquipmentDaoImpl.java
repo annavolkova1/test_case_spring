@@ -12,20 +12,24 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jetbrains.annotations.NotNull;
 
-
+@Slf4j
 public class EquipmentDaoImpl implements EquipmentDao {
 
-  private final static String INSERT_EQUIPMENT = "INSERT INTO equipment (name, Well_id) VALUES (?, ?)";
-  private final static String SELECT_ALL_EQUIPMENT = "SELECT id, name, Well_id FROM equipment";
+  private static final String INSERT_EQUIPMENT = "INSERT INTO equipment (name, Well_id) VALUES (?, ?)";
+  private static final String SELECT_ALL_EQUIPMENT = "SELECT id, name, Well_id FROM equipment";
 
   @Override
   public void createEquipment(@NotNull Equipment equipment) {
 
+    log.info("createEquipment is started");
+
     try (Connection connection = ConnectionProvider.getConnection();
-        PreparedStatement preparedStatement = connection.prepareStatement(INSERT_EQUIPMENT, Statement.RETURN_GENERATED_KEYS)) {
+        PreparedStatement preparedStatement = connection.prepareStatement(INSERT_EQUIPMENT,
+            Statement.RETURN_GENERATED_KEYS)) {
       equipment.setName(generateName());
       preparedStatement.setString(1, equipment.getName());
       preparedStatement.setLong(2, equipment.getWellId());
@@ -37,7 +41,6 @@ public class EquipmentDaoImpl implements EquipmentDao {
       }
 
       try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
-
         if (generatedKeys.next()) {
           equipment.setId(generatedKeys.getLong(1));
         }
@@ -47,13 +50,14 @@ public class EquipmentDaoImpl implements EquipmentDao {
       }
     }
     catch (SQLException throwable) {
-      throwable.printStackTrace();
+      log.error("This is error : " + throwable.getMessage(), throwable);
     }
   }
 
   @Override
   public Map<String, Integer> numberOfEquipment(String names) {
 
+    log.info("numberOfEquipment is started");
     Map<String, Integer> map = new HashMap<>();
 
     String SELECT_NUMBER = "SELECT well.name, COUNT(Well_id) AS Total FROM well "
@@ -69,8 +73,8 @@ public class EquipmentDaoImpl implements EquipmentDao {
         map.put(name, amount);
       }
     }
-    catch (SQLException exception) {
-      exception.printStackTrace();
+    catch (SQLException throwable) {
+      log.error("This is error : " + throwable.getMessage(), throwable);
     }
 
     return map;
@@ -78,6 +82,8 @@ public class EquipmentDaoImpl implements EquipmentDao {
 
   @Override
   public List<Equipment> getAllEquipments() {
+
+    log.info("getAllEquipments is started");
 
     List<Equipment> equipments = new ArrayList<>();
     try (Connection connection = ConnectionProvider.getConnection();
@@ -94,7 +100,7 @@ public class EquipmentDaoImpl implements EquipmentDao {
       }
     }
     catch (SQLException throwable) {
-      throwable.printStackTrace();
+      log.error("This is error : " + throwable.getMessage(), throwable);
     }
 
     return equipments;
@@ -107,6 +113,8 @@ public class EquipmentDaoImpl implements EquipmentDao {
    */
   @NotNull
   private String generateName() {
+
+    log.info("generateName is started");
 
     return RandomStringUtils.randomAlphanumeric(10);
   }

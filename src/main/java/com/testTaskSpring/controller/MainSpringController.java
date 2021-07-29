@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -32,16 +34,19 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 @RestController
+@Slf4j
 public class MainSpringController {
 
   WellService wellService = new WellServiceImpl();
   EquipmentService equipmentService = new EquipmentServiceImpl();
-  List<Well> wells;
+  List<Well> wells = new ArrayList<>();
   Map<String, Integer> map;
 
   @RequestMapping(value = "/createEquipmentOnWell", method = RequestMethod.POST)
-  public List<Well> createEquipmentOnWell(@RequestParam(value = "name") String name, @RequestParam(value = "amount") int amount) {
+  public List<Well> createEquipmentOnWell(@RequestParam(value = "name") String name,
+      @RequestParam(value = "amount") int amount) {
 
+    log.info("Into method createEquipmentOnWell");
     Well well = wellService.getWellByName(name);
 
     if (well == null) {
@@ -51,7 +56,8 @@ public class MainSpringController {
     for (int i = 0; i < amount; i++) {
       equipmentService.createEquipment(well.getId());
     }
-    return wells.stream()
+
+    return  wells.stream()
         .filter(x -> x.getName()
             .equalsIgnoreCase(name))
         .collect(Collectors.toList());
@@ -60,6 +66,7 @@ public class MainSpringController {
   @RequestMapping(value = "/displayGeneralInfoAboutEquipment", method = RequestMethod.GET)
   public Map<String, Integer> displayGeneralInfoAboutEquipment(@RequestParam(value = "name") String namesWell) {
 
+    log.info("Into method displayGeneralInfoAboutEquipment");
     String[] names = namesWell.split("[\\s,]");
     StringBuilder stringBuilder = new StringBuilder();
 
@@ -83,8 +90,9 @@ public class MainSpringController {
   @RequestMapping(value = "/exportAllDataToXmlFile", method = RequestMethod.GET)
   public List<String> exportAllDataToXmlFile(@RequestParam(value = "fileName") String fileName) {
 
+    log.info("Into method exportAllDataToXmlFile");
     String xmlFilePath = fileName + ".xml";
-    List<Well> wells = wellService.getAllWells();
+    wells = wellService.getAllWells();
     List<Equipment> equipments = equipmentService.getAllEquipments();
 
     try {
@@ -100,8 +108,7 @@ public class MainSpringController {
 
         for (Equipment equipment : equipments) {
 
-          if (well.getId()
-              .equals(equipment.getWellId())) {
+          if (well.getId().equals(equipment.getWellId())) {
             createDomElement(equipment, document, wellEl, "equipment");
           }
         }
@@ -114,11 +121,10 @@ public class MainSpringController {
 
       transformer.transform(domSource, streamResult);
 
-      return Files.readAllLines(Paths.get(Paths.get(xmlFilePath)
-          .toString()));
+      return Files.readAllLines(Paths.get(Paths.get(xmlFilePath).toString()));
     }
-    catch (ParserConfigurationException | TransformerException | IOException pce) {
-      pce.printStackTrace();
+    catch (ParserConfigurationException | TransformerException | IOException exception) {
+      log.error("This is error : ", exception);
     }
     return null;
   }

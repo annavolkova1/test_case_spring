@@ -57,7 +57,9 @@ public class MainSpringController {
       equipmentService.createEquipment(well.getId());
     }
 
-    return  wells.stream()
+    wells.add(well);
+
+    return wells.stream()
         .filter(x -> x.getName()
             .equalsIgnoreCase(name))
         .collect(Collectors.toList());
